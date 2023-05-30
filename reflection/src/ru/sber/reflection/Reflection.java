@@ -7,48 +7,40 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Reflection {
-    public WeekBase create(int day, String description, int counter, double time) throws Exception {
+    List<Class<? extends WeekBase>> classes = List.of(WeekClass.class, WeekClassNoAnnotation.class);
+    public WeekBase create(int day) throws Exception {
         Class<? extends WeekBase> metadata = null;
 
-        if (WeekClass.class.getAnnotation(Week.class).day() == day) {
-            metadata = WeekClass.class;
-        }
-
-        if (Objects.isNull(metadata) && WeekClassNoAnnotation.class.getAnnotation(Week.class).day() == day) {
-            metadata = WeekClassNoAnnotation.class;
+        for (var clazz : classes) {
+            if (clazz.getAnnotation(Week.class).day() == day) {
+                metadata = clazz;
+                break;
+            }
         }
 
         Objects.requireNonNull(metadata);
 
         WeekBase instance = metadata.getConstructor().newInstance();
-        Field containerField = WeekBase.class.getDeclaredField("container");
-        containerField.setAccessible(true);
-
-        DataContainer dataContainer = new DataContainer();
-        dataContainer.setDescription(description);
-        dataContainer.setCounter(counter);
-        dataContainer.setTime(time);
-        containerField.set(instance, dataContainer);
+        change(instance, day);
 
         return instance;
     }
-    public void change(@NonNull WeekBase instance) throws Exception {
-        Field containerField = WeekBase.class.getDeclaredField("container");
-        containerField.setAccessible(true);
-
+    private void change(@NonNull WeekBase instance, int day) throws Exception {
         Method setter = instance.getClass().getMethod("setData", String.class);
-        Alarm[] alarms = setter.getAnnotationsByType(Alarm.class);
-
-        // Сортировка по приоритетность, от менее приоритетных к более
-        Arrays.sort(alarms, Comparator.comparingInt(Alarm::priority));
+        List<Alarm> alarms = Arrays
+                .stream(setter.getAnnotationsByType(Alarm.class))
+                .filter(alarm -> alarm.hour() == day)
+                .toList();
 
         for (Alarm alarm : alarms) {
             setter.invoke(instance, alarm.description());
 
-            DataContainer container = (DataContainer) containerField.get(instance);
+            DataContainer container = extract(instance);
         }
     }
     public DataContainer extract(@NonNull WeekBase instance) throws Exception {

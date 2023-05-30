@@ -4,9 +4,11 @@ import ru.sber.exceptions.exceptions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class BankOnline {
     List<String> blockedCards = new ArrayList<>();
+    Pattern validCardPattern = Pattern.compile("^[0-9]*$");
     public BankOnline() {
         // я не знаю как сделать это через файл
         blockedCards.add("1111111111111111");
@@ -22,11 +24,7 @@ public class BankOnline {
             throw new InvalidArgumentException("money", "Передан null");
         }
 
-        if (money < 0) {
-            throw new OutOfLimitTransferException(cardNumber, money, 50000.0);
-        }
-
-        if (money > 50_000) {
+        if (money < 0 || money > 50_000) {
             throw new OutOfLimitTransferException(cardNumber, money, 50000.0);
         }
 
@@ -34,10 +32,8 @@ public class BankOnline {
             throw new InvalidCardNumberException(cardNumber, "Длина карты не равна 16");
         }
 
-        for (int i = 0; i < cardNumber.length(); i++) {
-            if (!Character.isDigit(cardNumber.charAt(i))) {
-                throw new InvalidCardNumberException(cardNumber, "В номере карты есть символы, отличные от цифр");
-            }
+        if (!validCardPattern.matcher(cardNumber).matches()) {
+            throw new InvalidCardNumberException(cardNumber, "В номере карты есть символы, отличные от цифр");
         }
 
         if (this.blockedCards.contains(cardNumber)) {

@@ -11,7 +11,7 @@ public class StreamsDemo {
         Random random = new Random();
 
         // первое задание
-        Double average = Stream.generate(random::nextInt).filter(value -> value >= 10 && value <= 99).limit(10).collect(Collectors.averagingInt(value -> value));
+        Double average = Stream.generate(random::nextInt).limit(10).filter(value -> value >= 10 && value <= 99).collect(Collectors.averagingInt(value -> value));
 
         // второе задание
         Stream.Builder<String> builder = Stream.builder();
@@ -45,6 +45,6 @@ public class StreamsDemo {
         // четвертое задание
         String binaryString = Stream.generate(() -> random.nextInt(0, 1)).limit(10).toString();
         Stream<Boolean> booleans = binaryString.chars().mapToObj(ch -> ch == '1');
-        boolean result = booleans.reduce(true, (identity, value) -> identity & value);
+        boolean result = booleans.reduce(true, (identity, value) -> identity && value);
     }
 }
