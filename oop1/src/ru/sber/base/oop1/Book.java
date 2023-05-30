@@ -1,6 +1,8 @@
 package ru.sber.base.oop1;
 
-public class Book {private String name;
+public class Book {
+
+    private String name;
 
     private Author author;
 
